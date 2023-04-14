@@ -1,4 +1,3 @@
-// src/app.js
 const express = require('express');
 
 const app = express();
@@ -18,8 +17,10 @@ const teams = [
   },
 ];
 
+// BUSCAR
 app.get('/teams', (req, res) => res.status(200).json({ teams }));
 
+// INSERIR
 app.post('/teams', (req, res) => {
   const newTeam = { ...req.body };
   teams.push(newTeam);
@@ -27,6 +28,7 @@ app.post('/teams', (req, res) => {
   res.status(201).json({ team: newTeam });
 });
 
+// ALTERAR
 app.put('/teams/:id', (req, res) => {
   const { id } = req.params;
   const { name, initials } = req.body;
@@ -42,12 +44,14 @@ app.put('/teams/:id', (req, res) => {
   res.status(200).json({ updateTeam });
 });
 
+// BUSCAR
 app.get('/teams/:id', (req, res) => {
   const { id } = req.params;
   const updateTeam = teams.find((team) => team.id === Number(id));
   res.status(200).json({ updateTeam });
 });
 
+// DELETAR
 app.delete('/teams/:id', (req, res) => {
   const { id } = req.params;
   const arrayPosition = teams.findIndex((team) => team.id === Number(id));
