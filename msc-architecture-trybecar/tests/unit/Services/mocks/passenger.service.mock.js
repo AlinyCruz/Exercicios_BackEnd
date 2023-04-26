@@ -1,6 +1,8 @@
 const validName = 'Bruce Lane';
 const validEmail = 'bruce.lane@acme.com';
 const validPhone = '(77) 8179-0943';
+const invalidValue = 'a';
+const WAITING_DRIVER = 1;
 
 const allPassengers = [
   {
@@ -10,10 +12,6 @@ const allPassengers = [
     phone: validPhone,
   },
 ];
-
-const invalidValue = 'a';
-
-const WAITING_DRIVER = 1;
 
 const travelResponse = ({
   id: 1,
@@ -25,6 +23,17 @@ const travelResponse = ({
   requestDate: '2022-08-24T03:04:04.374Z'
 });
 
+const listTravelsWithoutDriver = [{
+  id: 1,
+  passengerId: 1,
+  driverId: null,
+  travelStatusId: WAITING_DRIVER,
+  startingAddress: 'Start',
+  endingAddress: 'End',
+  requestDate: '2022-08-24T03:04:04.374Z',
+}];
+
+
 module.exports = {
   invalidValue,
   validName,
@@ -32,4 +41,5 @@ module.exports = {
   validPhone,
   allPassengers,
   travelResponse,
+  listTravelsWithoutDriver,
 };
