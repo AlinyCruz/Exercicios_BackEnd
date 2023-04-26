@@ -1,10 +1,6 @@
-/* eslint-disable mocha/max-top-level-suites */
 const { expect } = require('chai');
 const sinon = require('sinon');
 const { passengerService } = require('../../../src/services');
-const { passengerModel } = require('../../../src/models');
-
-const { allPassengers } = require('./mocks/passenger.service.mock');
 
 const {
   allPassengers, 
@@ -12,7 +8,14 @@ const {
   validName, 
   validEmail, 
   validPhone,
+  travelResponse,
   } = require('./mocks/passenger.service.mock');
+
+const {
+  travelModel,
+  waypointModel,
+  passengerModel,
+} = require('../../../src/models');
 
 describe('Verificando service pessoa passageira', function () {
   describe('listagem de pessoas passageiras', function () {
@@ -34,6 +37,7 @@ describe('Verificando service pessoa passageira', function () {
   });
 });
 
+// eslint-disable-next-line mocha/max-top-level-suites
 describe('busca de uma pessoa passageira', function () {
   it('retorna um erro caso receba um ID inválido', async function () {
   // arrange: Especificamente nesse it não temos um arranjo pois nesse fluxo o model não é chamado!
@@ -116,5 +120,101 @@ describe('cadastro de uma pessoa passageira com valores válidos', function () {
     // assert
     expect(result.type).to.equal(null);
     expect(result.message).to.deep.equal(allPassengers[0]);
+  });
+});
+
+describe('solicitação de viagem', function () {
+  it('sem pontos de parada é realizada com sucesso', async function () {
+      // arrange
+      /* retorna verdadeiro sinalizando que o passageiro existe */
+      sinon.stub(passengerModel, 'findById').resolves(true); 
+      /* retorna travel com ID 1 */
+      sinon.stub(travelModel, 'insert').resolves(1); 
+      /* retorna a viagem "mockada" */
+      sinon.stub(travelModel, 'findById').resolves(travelResponse);
+      const WAITING_DRIVER = 1;
+      const passenger = {
+          id: 1,
+          startingAddress: 'Rua X',
+          endingAddress: 'Rua Y',
+      };
+      // act
+      const travel = await passengerService.requestTravel(
+          passenger.id,
+          passenger.startingAddress,
+          passenger.endingAddress,
+      );
+      // assert
+      expect(travel.message).to.deep.equal({
+          id: 1,
+          passengerId: 1,
+          driverId: null,
+          travelStatusId: WAITING_DRIVER,
+          startingAddress: 'Rua X',
+          endingAddress: 'Rua Y',
+          requestDate: '2022-08-24T03:04:04.374Z',
+      });
+  });
+
+  it('com pontos de parada é realizada com sucesso', async function () {
+      // arrange
+      /* retorna verdadeiro sinalizando que o passageiro existe */
+      sinon.stub(passengerModel, 'findById').resolves(true); 
+      /* retorna travel com ID 1 */
+      sinon.stub(travelModel, 'insert').resolves(1); 
+      /* retorna a viagem "mockada" */
+      sinon.stub(travelModel, 'findById').resolves(travelResponse);
+      /* retorna waypoint com ID 1 */
+      sinon.stub(waypointModel, 'insert').resolves(1); 
+      const WAITING_DRIVER = 1;
+      const passenger = {
+          id: 1,
+          startingAddress: 'Rua X',
+          endingAddress: 'Rua Y',
+          waypoints: [{
+              address: 'Rua Z',
+              stopOrder: 1,
+          }],
+      };
+
+      // act
+      const travel = await passengerService.requestTravel(
+          passenger.id,
+          passenger.startingAddress,
+          passenger.endingAddress,
+          passenger.waypoints,
+      );
+
+      // assert
+      expect(travel.message).to.deep.equal({
+          id: 1,
+          passengerId: 1,
+          driverId: null,
+          travelStatusId: WAITING_DRIVER,
+          startingAddress: 'Rua X',
+          endingAddress: 'Rua Y',
+          requestDate: '2022-08-24T03:04:04.374Z',
+      });
+  });
+
+  it('com mesmo local de origem e destino é rejeitada', async function () {
+      // arrange
+      /* Aqui foi criado um mock de uma viagem inválida */
+      const passenger = {
+          id: 1,
+          startingAddress: 'Rua X',
+          endingAddress: 'Rua X',
+      };
+
+      // act
+      const error = await passengerService.requestTravel(
+          passenger.id,
+          passenger.startingAddress,
+          passenger.endingAddress,
+      );
+
+      // assert
+      expect(error.type).to.equal('INVALID_VALUE');
+      expect(error.message).to.equal('"endingAddress" contains an invalid value');
   });
 });
